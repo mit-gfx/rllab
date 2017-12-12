@@ -3,8 +3,11 @@ from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
 from examples.soft_walker_env import SoftWalkerEnv
 from rllab.envs.normalized_env import normalize
 from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
+import constant_strings as cs
+import os
 
-env = normalize(SoftWalkerEnv())
+urdf_file = os.path.join(cs.robot_rl_folder, 'test_data', 'urdf', 'soft_biped_walker.urdf')
+env = normalize(SoftWalkerEnv(urdf_file))
 
 policy = GaussianMLPPolicy(
     env_spec=env.spec,

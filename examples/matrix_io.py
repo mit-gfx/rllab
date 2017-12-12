@@ -13,6 +13,9 @@ def ReadMatrixFromFile(file_name):
 
 def WriteMatrixToFile(file_name, matrix):
     # First, get the row and col of the array.
+    shape = matrix.shape
+    if len(shape) == 1:
+        matrix = matrix[:,np.newaxis]
     row, col= matrix.shape
     row_bytes = row.to_bytes(4, sys.byteorder, signed=True)
     col_bytes = col.to_bytes(4, sys.byteorder, signed=True)
