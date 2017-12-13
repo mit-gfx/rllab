@@ -14,6 +14,7 @@ class PointEnv(Env):
         return Box(low=-0.1, high=0.1, shape=(2,))
 
     def reset(self):
+        self.render()
         self._state = np.random.uniform(-1, 1, size=(2,))
         observation = np.copy(self._state)
         return observation

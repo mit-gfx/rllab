@@ -1,11 +1,21 @@
 from rllab.envs.base import Env
 from rllab.spaces import Box
 from rllab.envs.base import Step
-from subprocess import call
+from subprocess import call, Popen
 import numpy as np
 import constant_strings as cs
 import os
 import matrix_io as m
+import IPython
+
+
+class CappedCubicVideoSchedule(object):
+    # Copied from gym, since this method is frequently moved around
+    def __call__(self, count):
+        if count < 1000:
+            return int(round(count ** (1. / 3))) ** 3 == count
+        else:
+            return count % 1000 == 0
 
 class SoftWalkerEnv(Env):
 
@@ -15,6 +25,8 @@ class SoftWalkerEnv(Env):
             raise TypeError('urdf_name should be a string');
         self._urdf_name = urdf_name;
         self._rl_api = os.path.join(cs.robot_rl_build_folder, 'rl_api')
+        self._count = 0
+        self._call_schedule = CappedCubicVideoSchedule() #Currently unused
 
     @property
     def observation_space(self):
@@ -58,9 +70,38 @@ class SoftWalkerEnv(Env):
             info[key.lower()] = value
         reward = float(info['reward'])
         done = True if int(info['done']) == 1 else False
+        
+        #Should we render?
+
+        
+        self.render()
+        
+        self._count += 1
+        
         return Step(observation=next_observation, reward=reward, done=done)
 
     def render(self):
+        state_file_name = 'viewer_states/view_state'
+        s = np.copy(self._state)
+        write_state_file_name = ''.join([state_file_name, '_', str(self._count)])
+        m.WriteMatrixToFile(state_file_name, s)
+        viewer_folder = os.path.join(cs.robot_rl_build_folder, 'rl_viewer')
+        
+        """
+        try:
+            self._p.kill()
+        except:
+            pass
+        """
+
+        try:
+            if self._p.poll() is not None:
+                self._p = Popen([self._rl_api, 'initialize-viewer', self._urdf_name, state_file_name,  viewer_folder])
+        except:
+            self._p = Popen([self._rl_api, 'initialize-viewer', self._urdf_name, state_file_name,  viewer_folder])
+        
+        call([self._rl_api, 'view', self._urdf_name, state_file_name,  viewer_folder, str(self._count)])
+    
         # TAO: not sure what should be done here.
         # print('current state:', self._state)
-        pass
+        

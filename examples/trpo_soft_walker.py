@@ -26,5 +26,6 @@ algo = TRPO(
     n_itr=1000,
     discount=0.99,
     step_size=0.01,
+    plot=False,
 )
 algo.train()
