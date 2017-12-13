@@ -26,6 +26,7 @@ class SoftWalkerEnv(Env):
         self._urdf_name = urdf_name;
         self._rl_api = os.path.join(cs.robot_rl_build_folder, 'rl_api')
         self._count = 0
+        self._file_count = 0
         self._call_schedule = CappedCubicVideoSchedule() #Currently unused
 
     @property
@@ -74,7 +75,8 @@ class SoftWalkerEnv(Env):
         #Should we render?
 
         
-        self.render()
+        if self._call_schedule(self._count):
+            self.render()
         
         self._count += 1
         
@@ -100,7 +102,8 @@ class SoftWalkerEnv(Env):
         except:
             self._p = Popen([self._rl_api, 'initialize-viewer', self._urdf_name, state_file_name,  viewer_folder])
         
-        call([self._rl_api, 'view', self._urdf_name, state_file_name,  viewer_folder, str(self._count)])
+        call([self._rl_api, 'view', self._urdf_name, state_file_name,  viewer_folder, str(self._file_count)])
+        self._file_count +=1
     
         # TAO: not sure what should be done here.
         # print('current state:', self._state)
