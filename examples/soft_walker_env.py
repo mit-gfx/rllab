@@ -85,8 +85,8 @@ class SoftWalkerEnv(Env):
     def render(self):
         state_file_name = 'viewer_states/view_state'
         s = np.copy(self._state)
-        write_state_file_name = ''.join([state_file_name, '_', str(self._count)])
-        m.WriteMatrixToFile(state_file_name, s)
+        write_state_file_name = ''.join([state_file_name, '_', str(self._file_count)])
+        m.WriteMatrixToFile(write_state_file_name, s)
         viewer_folder = os.path.join(cs.robot_rl_build_folder, 'rl_viewer')
         
         """
