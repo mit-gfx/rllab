@@ -22,10 +22,9 @@ algo = TRPO(
     policy=policy,
     baseline=baseline,
     batch_size=4000,
-    max_path_length=100,
+    max_path_length=5,
     n_itr=1000,
     discount=0.99,
     step_size=0.01,
-    plot=False,
 )
 algo.train()

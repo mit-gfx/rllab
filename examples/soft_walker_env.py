@@ -7,15 +7,17 @@ import constant_strings as cs
 import os
 import matrix_io as m
 import IPython
+from datetime import datetime 
 
 
 class CappedCubicVideoSchedule(object):
     # Copied from gym, since this method is frequently moved around
     def __call__(self, count):
-        if count < 1000:
-            return int(round(count ** (1. / 3))) ** 3 == count
-        else:
-            return count % 1000 == 0
+        return count % 1 == 0
+        #if count < 1000:
+        #    return int(round(count ** (1. / 3))) ** 3 == count
+        #else:
+        #    return count % 1000 == 0
 
 class SoftWalkerEnv(Env):
 
@@ -28,33 +30,50 @@ class SoftWalkerEnv(Env):
         self._count = 0
         self._file_count = 0
         self._call_schedule = CappedCubicVideoSchedule() #Currently unused
+        
+        #lazy evaluation objects
+        self._obs_space = None
+        self._action_space = None
+        self._reset_value = None
+        
 
     @property
     def observation_space(self):
-        state_bound_file = 'state_bound'
-        call([self._rl_api, 'state-space', self._urdf_name, state_bound_file])
-        bound = m.ReadMatrixFromFile(state_bound_file)
-        return Box(bound[:, 0], bound[:, 1])
+        startTime= datetime.now() 
+        if self._obs_space is None:
+            state_bound_file = 'state_bound'
+            call([self._rl_api, 'state-space', self._urdf_name, state_bound_file])
+            bound = m.ReadMatrixFromFile(state_bound_file)
+            self._obs_space = Box(bound[:, 0], bound[:, 1])
+        timeElapsed=datetime.now()-startTime 
+        #print('ObservationSpace: Time elpased (hh:mm:ss.ms) {}'.format(timeElapsed))
+        return self._obs_space
 
     @property
     def action_space(self):
-        action_bound_file = 'action_bound'
-        call([self._rl_api, 'action-space', self._urdf_name, action_bound_file])
-        bound = m.ReadMatrixFromFile(action_bound_file)
-        return Box(bound[:, 0], bound[:, 1])
+        if self._action_space is None:
+            action_bound_file = 'action_bound'
+            call([self._rl_api, 'action-space', self._urdf_name, action_bound_file])
+            bound = m.ReadMatrixFromFile(action_bound_file)
+            self._action_space = Box(bound[:, 0], bound[:, 1])
+            return self._action_space
+        return self._action_space
 
     def reset(self):
-        state_file_name = 'reset_state' 
-        call([self._rl_api, 'reset', self._urdf_name, state_file_name])
-        self._state = m.ReadMatrixFromFile(state_file_name)
-        observation = np.copy(self._state)
-        return observation
+        if self._reset_value is None:
+            state_file_name = 'reset_state' 
+            call([self._rl_api, 'reset', self._urdf_name, state_file_name])
+            self._state = m.ReadMatrixFromFile(state_file_name)
+            observation = np.copy(self._state)
+            self._reset_value = observation
+        return self._reset_value
 
     def step(self, action):
+        startTime= datetime.now() 
         state_file_name = 'old_state'
         action_file_name = 'action'
         new_state_file_name = 'new_state'
-        dt = '0.005'
+        dt = '0.01'
         info_file_name = 'info.txt'
         s = np.copy(self._state)
         a = np.copy(action)
@@ -72,6 +91,9 @@ class SoftWalkerEnv(Env):
         reward = float(info['reward'])
         done = True if int(info['done']) == 1 else False
         
+        timeElapsed=datetime.now()-startTime 
+
+        #print('Step: Time elpased (hh:mm:ss.ms) {}'.format(timeElapsed))
         #Should we render?
 
         
