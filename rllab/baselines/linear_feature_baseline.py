@@ -1,6 +1,7 @@
 from rllab.baselines.base import Baseline
 from rllab.misc.overrides import overrides
 import numpy as np
+import IPython
 
 
 class LinearFeatureBaseline(Baseline):
@@ -28,6 +29,7 @@ class LinearFeatureBaseline(Baseline):
         returns = np.concatenate([path["returns"] for path in paths])
         reg_coeff = self._reg_coeff
         for _ in range(5):
+            #IPython.embed()
             self._coeffs = np.linalg.lstsq(
                 featmat.T.dot(featmat) + reg_coeff * np.identity(featmat.shape[1]),
                 featmat.T.dot(returns)

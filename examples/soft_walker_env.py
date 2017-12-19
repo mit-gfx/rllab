@@ -60,12 +60,15 @@ class SoftWalkerEnv(Env):
         return self._action_space
 
     def reset(self):
+        #print('reset')
         if self._reset_value is None:
             state_file_name = 'reset_state' 
             call([self._rl_api, 'reset', self._urdf_name, state_file_name])
             self._state = m.ReadMatrixFromFile(state_file_name)
             observation = np.copy(self._state)
             self._reset_value = observation
+        #print(self._reset_value)
+        self._state = self._reset_value
         return self._reset_value
 
     def step(self, action):
@@ -75,6 +78,7 @@ class SoftWalkerEnv(Env):
         new_state_file_name = 'new_state'
         dt = '0.01'
         info_file_name = 'info.txt'
+        #print(self._state)
         s = np.copy(self._state)
         a = np.copy(action)
         m.WriteMatrixToFile(state_file_name, s)
@@ -101,6 +105,13 @@ class SoftWalkerEnv(Env):
             self.render()
         
         self._count += 1
+        
+        #TODO: Why are nans appearing at all?
+        
+        if np.isnan(reward):
+            #IPython.embed()
+            print('fixed a NAN')
+            reward = 0.0
         
         return Step(observation=next_observation, reward=reward, done=done)
 
