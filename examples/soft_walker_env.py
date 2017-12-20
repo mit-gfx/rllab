@@ -76,7 +76,7 @@ class SoftWalkerEnv(Env):
         state_file_name = 'old_state'
         action_file_name = 'action'
         new_state_file_name = 'new_state'
-        dt = '0.01'
+        dt = '0.001'
         info_file_name = 'info.txt'
         #print(self._state)
         s = np.copy(self._state)
