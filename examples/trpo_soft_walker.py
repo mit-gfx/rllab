@@ -6,7 +6,7 @@ from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
 import constant_strings as cs
 import os
 
-urdf_file = os.path.join(cs.robot_rl_folder, 'test_data', 'urdf', 'soft_biped_walker_hat.urdf')
+urdf_file = os.path.join(cs.robot_rl_folder, 'test_data', 'urdf', 'soft_biped_walker_centered.urdf')
 env = normalize(SoftWalkerEnv(urdf_file))
 
 policy = GaussianMLPPolicy(
@@ -22,9 +22,9 @@ algo = TRPO(
     policy=policy,
     baseline=baseline,
     batch_size=40000,
-    max_path_length=1000,
+    max_path_length=5000,
     n_itr=1000,
-    discount=0.99,
-    step_size=5.0,
+    discount=0.9999,
+    step_size=0.01,
     )
 algo.train()

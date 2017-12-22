@@ -72,7 +72,7 @@ class SoftWalkerEnv(Env):
         return self._reset_value
 
     def step(self, action):
-        startTime= datetime.now() 
+        
         state_file_name = 'old_state'
         action_file_name = 'action'
         new_state_file_name = 'new_state'
@@ -83,8 +83,12 @@ class SoftWalkerEnv(Env):
         a = np.copy(action)
         m.WriteMatrixToFile(state_file_name, s)
         m.WriteMatrixToFile(action_file_name, a)
+        startTime= datetime.now() 
         call([self._rl_api, 'step', self._urdf_name, state_file_name, action_file_name, \
             dt, new_state_file_name, info_file_name])
+        timeElapsed=datetime.now()-startTime 
+
+        #print('Step: Time elpased (hh:mm:ss.ms) {}'.format(timeElapsed))
         self._state = m.ReadMatrixFromFile(new_state_file_name)
         next_observation = np.copy(self._state)
         # Now get reward and done ready from the text file.
@@ -95,14 +99,12 @@ class SoftWalkerEnv(Env):
         reward = float(info['reward'])
         done = True if int(info['done']) == 1 else False
         
-        timeElapsed=datetime.now()-startTime 
-
-        #print('Step: Time elpased (hh:mm:ss.ms) {}'.format(timeElapsed))
+        
         #Should we render?
 
         
-        if self._call_schedule(self._count):
-            self.render()
+        #if self._call_schedule(self._count):
+        #    self.render()
         
         self._count += 1
         
@@ -112,6 +114,8 @@ class SoftWalkerEnv(Env):
             #IPython.embed()
             print('fixed a NAN')
             reward = 0.0
+            
+        
         
         return Step(observation=next_observation, reward=reward, done=done)
 
