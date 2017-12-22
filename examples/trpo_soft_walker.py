@@ -7,7 +7,8 @@ import constant_strings as cs
 import os
 
 urdf_file = os.path.join(cs.robot_rl_folder, 'test_data', 'urdf', 'soft_biped_walker_centered.urdf')
-env = normalize(SoftWalkerEnv(urdf_file))
+batch_size = 40000
+env = normalize(SoftWalkerEnv(urdf_file, batch_size))
 
 policy = GaussianMLPPolicy(
     env_spec=env.spec,
@@ -21,7 +22,7 @@ algo = TRPO(
     env=env,
     policy=policy,
     baseline=baseline,
-    batch_size=40000,
+    batch_size=batch_size,
     max_path_length=5000,
     n_itr=1000,
     discount=0.9999,

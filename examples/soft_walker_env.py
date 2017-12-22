@@ -21,7 +21,7 @@ class CappedCubicVideoSchedule(object):
 
 class SoftWalkerEnv(Env):
 
-    def __init__(self, urdf_name):
+    def __init__(self, urdf_name, batch_size):
         super(SoftWalkerEnv, self).__init__()
         if not isinstance(urdf_name, str):
             raise TypeError('urdf_name should be a string');
@@ -35,7 +35,16 @@ class SoftWalkerEnv(Env):
         self._obs_space = None
         self._action_space = None
         self._reset_value = None
+        self._batch_size = batch_size #Needed for rendering properly
+        self._batch_num = 0
         
+    def get_iter_num(self):
+        return int(self._count / self._batch_size)
+        
+    def update_counters(self):
+        if self._count % self._batch_size == 0:
+            self._batch_num = 0
+            self._file_count = 0
 
     @property
     def observation_space(self):
@@ -103,10 +112,13 @@ class SoftWalkerEnv(Env):
         #Should we render?
 
         
-        #if self._call_schedule(self._count):
-        #    self.render()
+        if self._call_schedule(self._count):
+            self.render()
         
         self._count += 1
+        
+        #DO we reset?
+        self.update_counters()
         
         #TODO: Why are nans appearing at all?
         
@@ -115,23 +127,23 @@ class SoftWalkerEnv(Env):
             print('fixed a NAN')
             reward = 0.0
             
-        
+            
+        #If we are done, increase the batch num
+        if done:
+            self._batch_num += 1
+            print(self._batch_num)
+            self._file_count = 0
         
         return Step(observation=next_observation, reward=reward, done=done)
 
     def render(self):
         state_file_name = 'viewer_states/view_state'
         s = np.copy(self._state)
-        write_state_file_name = ''.join([state_file_name, '_', str(self._file_count)])
+        write_state_file_name = ''.join([state_file_name, '_', str(self.get_iter_num()), '_', str(self._batch_num), '_', str(self._file_count)])
         m.WriteMatrixToFile(write_state_file_name, s)
         viewer_folder = os.path.join(cs.robot_rl_build_folder, 'rl_viewer')
         
-        """
-        try:
-            self._p.kill()
-        except:
-            pass
-        """
+
 
         try:
             if self._p.poll() is not None:
@@ -139,7 +151,7 @@ class SoftWalkerEnv(Env):
         except:
             self._p = Popen([self._rl_api, 'initialize-viewer', self._urdf_name, state_file_name,  viewer_folder])
         
-        call([self._rl_api, 'view', self._urdf_name, state_file_name,  viewer_folder, str(self._file_count)])
+        call([self._rl_api, 'view', self._urdf_name, state_file_name,  viewer_folder, str(self.get_iter_num()), str(self._batch_num), str(self._file_count)])
         self._file_count +=1
     
         # TAO: not sure what should be done here.
